@@ -1,55 +1,60 @@
-import random
+import pandas as pd
 
 """
 
-    GERADOR DE CPF
-    feito para embasar lógica e sintaxe de Python
+Esse sistema foi feito para auxiliar no aprendizado de pandas.
     
 """
 
-# fase I - gerando os 9 primeiros digitos + 2 digitos finais
-# 1 passo - geramos os 9 primeiros dígitos com radint
-nove_digitos = ""
+# A primeira fase é obter e tratar dados
+# Obtemos dados manualmente, com um grande dicionário - contendo dados viáveis e dados "poluídos"
+dados_brutos = {
+    'Sensor': ['S-01', 'S-02', 'S-03', 'S-04', 'S-05'],
+    'Umidade_Percentual': [45, 120, 38, -10, 60], # aqui, 120 e -10 são erros (a umidade deve ir de 0 a 100, nunca negativa)
+    'Nivel_pH': [6.5, 7.2, 15.0, 6.8, 5.5]        # 15.0 também é um erro (o limite de pH é 14.0)
+}
 
-for i in range(9):
-    nove_digitos += str(random.randint(0, 9)) # intervalo do num gerado
+# Transformando o dicionário em Dataframe (uma tabela)
+df_sensores = pd.DataFrame(dados_brutos)
 
-# 2 passo - calculamos o primeiro dígito verificador
-contador_regressivo_1 = 10
-resultado_1_digito = 0
 
-# estamos multiplicando os valores por 10 regressivo e somando eles numa variável
-for digito in nove_digitos:
-    resultado_1_digito += int(digito) * contador_regressivo_1
-    contador_regressivo_1 -= 1
+# A segunda fase envolve entender quais dados são úteis ou não. Aqui, crio uma coluna extra (um resultado boolean) indicando se os dados são íntegros. Se atender a todos os 'ands', recebe True, do contrário, recebe False.
+df_sensores['Status_Valido'] = (
+    (df_sensores['Umidade_Percentual'] >= 0) & 
+    (df_sensores['Umidade_Percentual'] <= 100) & 
+    (df_sensores['Nivel_pH'] >= 0) & 
+    (df_sensores['Nivel_pH'] <= 14)
+)
 
-# estamos agora multiplicando o resultado por 10 e obtendo o resto da divisão por 11
-digito_1 = (resultado_1_digito * 10) % 11
-digito_1 = digito_1 if digito_1 <= 9 else 0
+print("-" * 60)
+print("Base de Dados:")
+print("-" * 60)
+print(df_sensores)
+print()
 
-# print(digito_1) # debug
 
-# 3 passo - calcular o segundo dígito verificador
-dez_digitos = nove_digitos + str(digito_1)
+# A última fase envolve um relatório mais visível. 
+# TODO: Escreva aqui como o Pandas consegue somar os valores True automaticamente para criar nossos contadores, sem precisarmos fazer isso manualmente.
+contador_aprovados = df_sensores['Status_Valido'].sum()
+contador_reprovados = len(df_sensores) - contador_aprovados
 
-contador_regressivo_2 = 11
-resultado_2_digito = 0
+# TODO: Escreva aqui sobre como filtramos o DataFrame original para gerar duas "sub-tabelas" focadas no que precisamos reportar.
+df_aprovados = df_sensores[df_sensores['Status_Valido'] == True]
+df_reprovados = df_sensores[df_sensores['Status_Valido'] == False]
 
-for digito in dez_digitos:
-    resultado_2_digito += int(digito) * contador_regressivo_2
-    contador_regressivo_2 -= 1
 
-digito_2 = (resultado_2_digito * 10) % 11
-digito_2 = digito_2 if digito_2 <= 9 else 0
+print("=" * 60)
+print("RELATÓRIO DE STATUS DOS SENSORES 📊")
+print("=" * 60)
 
-# print(digito_2) # debug
+# TODO: Escreva aqui sobre a decisão de exibir diretamente as colunas da tabela filtrada ao invés de iterar linha por linha para formar frases.
+print("✅ SENSORES APROVADOS (Leituras Íntegras):")
+print(df_aprovados[['Sensor', 'Umidade_Percentual', 'Nivel_pH']])
 
-# fase II - montando tudo
-# 4 passo - montando os 9 números + 2 dígitos em uma string única
-cpf = f"{nove_digitos}{digito_1}{digito_2}"
+print("\n[Alerta] - SENSORES FORA DO LIMITE (Necessitam Calibração):")
+print(df_reprovados[['Sensor', 'Umidade_Percentual', 'Nivel_pH']])
 
-# 5 passo - printando o CPF de duas formas
-# esse primeiro print é só pra separar tudo
-print("-" * 45)
-print("CPF gerado (sem máscara):", cpf)
-print("CPF gerado (com máscara):", f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}")
+print("-" * 60)
+print(f"Processamento concluído: {contador_aprovados} leituras aproveitadas com sucesso! {contador_reprovados} sensores precisam de calibração.")
+
+print("=" * 60)
