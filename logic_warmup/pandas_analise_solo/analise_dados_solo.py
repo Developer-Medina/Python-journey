@@ -12,7 +12,7 @@ dados_brutos = {
     'Umidade_Percentual': [45, 120, 38, -10, 60], # aqui, 120 e -10 são erros (a umidade deve ir de 0 a 100, nunca negativa)
     'Nivel_pH': [6.5, 7.2, 15.0, 6.8, 5.5]        # 15 também é um erro (o limite de pH é 14)
 }
-
+ 
 # Transformando o dicionário em Dataframe (uma tabela)
 df_sensores = pd.DataFrame(dados_brutos)
 # print(df_sensores)
